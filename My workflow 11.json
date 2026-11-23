@@ -1,0 +1,370 @@
+{
+  "name": "My workflow 11",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -656,
+        -80
+      ],
+      "id": "28834a8e-a5f2-4bec-8665-c555c69f9936",
+      "name": "Webhook",
+      "webhookId": "a8cb951f-0f7c-45ff-b509-650a9262952e"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a support assistant. Analyze this message and reply ONLY with valid JSON, no extra text.\n\nName: {{ $json.body.name }}\nMessage: {{ $json.body.message }}\n\nReturn:\n{\n  \"category\": \"sales | support | spam\",\n  \"urgency\": \"low | medium | high\",\n  \"summary\": \"one sentence summary\",\n  \"suggested_reply\": \"a short, friendly reply to the sender\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -336,
+        -48
+      ],
+      "id": "b552e35f-62bd-4a9d-ab3d-d500fde0f17b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        160
+      ],
+      "id": "10a8c7f2-7371-4732-801d-60fdbe6a1096",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jT6HSX7I4zPpKgHI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"category\": \"{{ $json.category }}\",\n  \"suggested_reply\": \"{{ $json.suggested_reply }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        16,
+        -96
+      ],
+      "id": "05a335bc-e65f-46f0-841a-3fcbfe5984fb",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.email }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        192
+      ],
+      "id": "9611d93c-e89a-49ba-940d-337fda9a0a71",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "woqT1whsF49CBOOQ",
+          "name": "Postgres account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\nconst clean = raw.replace(/```json|```/g, \"\").trim();\nconst ai = JSON.parse(clean);\nconst form = $('Webhook').first().json.body;\nreturn [{ json: { ...form, ...ai } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        128
+      ],
+      "id": "55f491c2-e523-4f2f-8cd5-d2e4e2105c8d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "17UVbtziFZqUharqKXoMsDRFOqGTlEjXeA2Lr7RcAHxg",
+          "mode": "list",
+          "cachedResultName": "Contact Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17UVbtziFZqUharqKXoMsDRFOqGTlEjXeA2Lr7RcAHxg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/17UVbtziFZqUharqKXoMsDRFOqGTlEjXeA2Lr7RcAHxg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now }}",
+            "name ": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "category": "={{ $json.category }}",
+            "message": "={{ $json.message }}",
+            "urgency": "={{ $json.urgency }}",
+            "summary": "={{ $json.summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name ",
+              "displayName": "name ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        128
+      ],
+      "id": "f44fff7a-2011-4ba8-a76c-8df5b4dddcd0",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hQB0w52Uf4hymGWg",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "334867b7-5be1-41aa-9e7b-81a83dd5af41",
+              "leftValue": "={{ $json.urgency }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        240,
+        -32
+      ],
+      "id": "a268aeba-043a-45dc-9d0d-56267053d1fc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=Urgent message from {{ $json.name }} ({{ $json.email }}): {{ $json.summary }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        448,
+        -128
+      ],
+      "id": "9e4dca3e-c038-48b4-a9fc-329ecaafb981",
+      "name": "Discord",
+      "webhookId": "488aa4ca-e4cb-49b5-936f-f028239fcdf0",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "FmzN6VkzoRHU8xB8",
+          "name": "Discord Webhook account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Discord",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "add4a14f-e023-4d3f-9d0b-9097bee6d6bf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "46c38d0665e1fce7aad28b1e5c5031194228d6f684edb9f574886d1219617fb3"
+  },
+  "nodeGroups": [],
+  "id": "MHm9TOQlTi6UfHy5",
+  "tags": []
+}
